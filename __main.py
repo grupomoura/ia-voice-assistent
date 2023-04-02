@@ -3,7 +3,7 @@ import speech_recognition as sr  # pip install SpeechRecognition
 import pyttsx3  # pip install pyttsx3
 
 # Key da openai para utilizar o chatgpt
-openai.api_key = "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"
+openai.api_key = "YOUR_API_KEY"
 
 noKeyWord = False
 chat_input = False
