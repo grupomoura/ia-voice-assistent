@@ -1,9 +1,14 @@
 import openai  # pip install openai
 import speech_recognition as sr  # pip install SpeechRecognition
 import pyttsx3  # pip install pyttsx3
+import configparser
+import json
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 # Key da openai para utilizar o chatgpt
-openai.api_key = "YOUR_API_KEY"
+openai.api_key = config.get('openai', 'api_key')
 
 noKeyWord = False
 chat_input = False
@@ -60,23 +65,35 @@ while True:
             try:
                 r.adjust_for_ambient_noise(source)
 
-                audio = r.listen(source)
-
-                question = r.recognize_google(audio, language="pt-BR")
                 print("Listening..")
+                audio = r.listen(source)
+                question = r.recognize_google(audio, language="pt-BR")
             except:
                 continue
 
-    if question.lower().startswith("zeus") or noKeyWord:
+    if question.lower().startswith("assistente") or noKeyWord:
         if ("desligar" in question.lower()):
             talk("Desligando.")
             exit(0)
 
-        print("{0}:".format(username), question)
+        print("f'{0}:".format(username), question)
 
         answer = generate_answer(question)
 
-        print("Zeus > ", answer[0])
-        talk(answer)
+        # Save the current interaction on memory database (json file)
+        with open('memory_data.json', 'r') as f:
+            interactions = json.load(f)
+
+        interactions.append({
+            'usuario': question,
+            'assistente': answer[0]
+        })
+
+        with open('memory_data.json', 'w') as f:
+            json.dump(interactions, f)
+
+        print("f'Zeus > ", answer[0])
+        talk(answer[0])
     else:
-        print("Não entendi..")
+        print(question)
+        continue
