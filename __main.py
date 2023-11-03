@@ -3,6 +3,7 @@ import speech_recognition as sr  # pip install SpeechRecognition
 import pyttsx4  # pip install pyttsx4
 import configparser
 import json
+import webbrowser
 from datetime import datetime
 
 config = configparser.ConfigParser()
@@ -24,6 +25,8 @@ context = """Você é meu assistente virtual chamado MecChat, você foi desenvol
 if chat_input:
     noKeyWord = True
 
+
+
 def generate_answer(prompt):  # cria a instância da api do chatgpt
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -39,6 +42,15 @@ def talk(texto):  # função para sintese de voz
     engine.say(texto)
     engine.runAndWait()
     engine.stop()
+
+def wishme():                                   #for wishyou good morning ,evening and night
+    hour=int(datetime.now().hour)
+    if hour>=0 and hour<12:
+        talk('Bom dia! ')
+    elif hour>=12 and hour<18:   
+        talk('Boa tarde! ')
+    else:
+        talk('Boa noite! ')
 
 # variaveis para controlar o reconhecimento de voz
 r = sr.Recognizer()
@@ -61,7 +73,10 @@ engine.setProperty("volume", 1.) # Volume da voz 0-1
 for i, voice in enumerate(voices):
     if voice.languages == ['pt-BR']:
         engine.setProperty('voice', voices[i].id)
-        talk("Olá, sou Méqui-Chét, seu assistente virtual")
+        talk("Olá,")
+        wishme()
+        talk("sou Méqui-Chét, seu assistente virtual")
+        break
 
 while True:
     question = ""
@@ -79,7 +94,22 @@ while True:
             except Exception:
                 continue
 
+    # if question.lower().startswith("plataforma especialista"):
+    #     webbrowser.open("youtube.com")
+    #     talk("Ok! Abrindo a plataforma especialista.")
+    #     continue
+    # elif question.lower().startswith("youtube"):
+    #     webbrowser.open("youtube.com")
+    #     talk("Ok! Abrindo o youtube.")
+    #     continue
+    
+    # elif question.lower().startswith("google"):
+        webbrowser.open("google.com")
+        talk("Ok! Abrindo o GOOGLE.")
+        continue
+
     if question.lower().startswith("assistente") or noKeyWord:
+    
         if ("desligar" in question.lower()):
             talk("Desligando.")
             exit(0)
