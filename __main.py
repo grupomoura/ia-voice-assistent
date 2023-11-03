@@ -1,8 +1,9 @@
 import openai  # pip install openai
 import speech_recognition as sr  # pip install SpeechRecognition
-import pyttsx3  # pip install pyttsx3
+import pyttsx4  # pip install pyttsx4
 import configparser
 import json
+from datetime import datetime
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -14,12 +15,14 @@ noKeyWord = False
 chat_input = False
 
 # user settings
-username = "Twilight Moon"
-context = "você é meu assistente virtual chamado zeus"
+username = "Aluno"
+context = """Você é meu assistente virtual chamado MecChat, você foi desenvolvido pelo laboratório de tecnologia da empresa Mecânica Total Brasil, baseado em uma tecnologia proprietária e é um assistente de suporte técnico especializado em serviços 
+    e ferramentas de mecânica industrial, hidraulica industrial, vulcanização industrial, lubrificação industrial. Responda de forma objetiva e clara sempre que possível.
+    Não responda a absolutamente nada que não tenha conexão ou relação com o contexto industrial, conduza a conversa para o contexto correto.
+    Forneça soluções, orientações e sugestões para resolução de problemas."""
 
 if chat_input:
     noKeyWord = True
-
 
 def generate_answer(prompt):  # cria a instância da api do chatgpt
     response = openai.ChatCompletion.create(
@@ -42,17 +45,23 @@ r = sr.Recognizer()
 mic = sr.Microphone()
 
 # variaveis de controle de sintese de voz
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')
-engine.setProperty('rate', 180)  # velocidade 120 = lento
+try:
+    engine =  pyttsx4.init() #Padrão selecionado
+except:
+    engine =  pyttsx4.init('dummy')
 
 # ==================== LISTAGEM DE VOZES  ====================
-# for i, all_voices in enumerate(voices):
-# print(i, all_voices)
+voices = engine.getProperty('voices')
+
+# ==================== CONFIGURAÇOES DE VOZ  ====================
+engine.setProperty('rate', 60)  # velocidade 120 = lento
+engine.setProperty("volume", 1.) # Volume da voz 0-1
 
 # ==================== SELEÇÃO DE VOZES  ====================
-voice = 2  # Seleciona a voz do RICARDO IVONA
-engine.setProperty('voice', voices[voice].id)
+for i, voice in enumerate(voices):
+    if voice.languages == ['pt-BR']:
+        engine.setProperty('voice', voices[i].id)
+        talk("Olá, sou Méqui-Chét, seu assistente virtual")
 
 while True:
     question = ""
@@ -64,11 +73,10 @@ while True:
         with mic as source:
             try:
                 r.adjust_for_ambient_noise(source)
-
-                print("Listening..")
+                print("Escutando..")
                 audio = r.listen(source)
                 question = r.recognize_google(audio, language="pt-BR")
-            except:
+            except Exception:
                 continue
 
     if question.lower().startswith("assistente") or noKeyWord:
@@ -81,7 +89,7 @@ while True:
         answer = generate_answer(question)
 
         # Save the current interaction on memory database (json file)
-        with open('memory_data.json', 'r') as f:
+        with open('logs/memory_data.json', 'r') as f:
             interactions = json.load(f)
 
         interactions.append({
@@ -89,10 +97,10 @@ while True:
             'assistente': answer[0]
         })
 
-        with open('memory_data.json', 'w') as f:
+        with open(f'logs/memory_data.json', 'w') as f:
             json.dump(interactions, f)
 
-        print("f'Zeus > ", answer[0])
+        print("f'MecChat > ", answer[0])
         talk(answer[0])
     else:
         print(question)
