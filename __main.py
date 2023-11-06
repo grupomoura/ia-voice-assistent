@@ -12,14 +12,13 @@ config.read('config.ini')
 # Key da openai para utilizar o chatgpt
 openai.api_key = config.get('openai', 'api_key')
 
-noKeyWord = False
-chat_input = False
+noKeyWord = True
+chat_input = True
 
 # user settings
 username = "Aluno"
 context = """Você é meu assistente virtual chamado MecChat, você foi desenvolvido pelo laboratório de tecnologia da empresa Mecânica Total Brasil, baseado em uma tecnologia proprietária e é um assistente de suporte técnico especializado em serviços 
     e ferramentas de mecânica industrial, hidraulica industrial, vulcanização industrial, lubrificação industrial. Responda de forma objetiva e clara sempre que possível.
-    Não responda a absolutamente nada que não tenha conexão ou relação com o contexto industrial, conduza a conversa para o contexto correto.
     Forneça soluções, orientações e sugestões para resolução de problemas."""
 
 if chat_input:
@@ -49,6 +48,16 @@ def wishme():                                   #for wishyou good morning ,eveni
         talk('Boa tarde! ')
     else:
         talk('Boa noite! ')
+
+def navegator(url):
+    try:
+        webbrowser.get(using='chrome').open(url)
+    except:
+        try:
+            webbrowser.get(using='google-chrome').open(url)
+        except:
+            webbrowser.open(url)
+
 
 # variaveis para controlar o reconhecimento de voz
 r = sr.Recognizer()
@@ -92,41 +101,41 @@ while True:
             except Exception:
                 continue
 
-    if question.lower().startswith("abrir plataforma especialista"):
-        webbrowser.open("https://app.mecanicatotalacademy.com.br")
-        talk("Ok! Abrindo a plataforma especialista.")
-        continue
-
-    # elif question.lower().startswith("youtube"):
-    #     webbrowser.open("http://youtube.com")
-    #     talk("Ok! Abrindo o youtube.")
-    #     continue
-    
-    # elif question.lower().startswith("google"):
-        webbrowser.open("google.com")
-        talk("Ok! Abrindo o GOOGLE.")
-        continue
-
-    elif question.lower().startswith("assistente") or noKeyWord:
+    if question.lower().startswith("assistente") or noKeyWord:
         if ("desligar" in question.lower()):
             talk("Desligando.")
             exit(0)
+
+        elif ("área do aluno" in question.lower()):
+            talk("Ok! Abrindo a área do aluno.")
+            navegator("https://app.mecanicatotalacademy.com.br/lessons")
+            continue
+
+        elif ("abrir plataforma" in question.lower()):
+            talk("Ok! Abrindo a plataforma especialista.")
+            navegator("https://app.mecanicatotalacademy.com.br")
+            continue
 
         print("f'{0}:".format(username), question)
 
         answer = generate_answer(question)
 
-        # Save the current interaction on memory database (json file)
-        with open('logs/memory_data.json', 'r') as f:
-            interactions = json.load(f)
+        try:
+            # Save the current interaction on memory database (json file)
+            with open('logs/memory_data.json', 'r') as f:
+                interactions = json.load(f)
+            interactions.append({
+                'usuario': question,
+                'assistente': answer[0]
+            })
+        except:
+            pass
 
-        interactions.append({
-            'usuario': question,
-            'assistente': answer[0]
-        })
-
-        with open(f'logs/memory_data.json', 'w') as f:
-            json.dump(interactions, f)
+        try:
+            with open(f'logs/memory_data.json', 'w') as f:
+                json.dump(interactions, f)
+        except:
+            pass
 
         print("f'MecChat > ", answer[0])
         talk(answer[0])
