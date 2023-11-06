@@ -11,15 +11,27 @@ config.read('config.ini')
 
 # Key da openai para utilizar o chatgpt
 openai.api_key = config.get('openai', 'api_key')
+prompt_default = config.get('prompts', 'default')
 
-noKeyWord = True
-chat_input = True
+while True:
+    option = input("""\n\nSelecione uma opção:
+    1. Conversar digitando
+    2. Conversar falando (Microfone)
+    Resposta: """)
+    if option == "1":
+        noKeyWord = True
+        chat_input = True
+        break
+    elif option == "2":
+        noKeyWord = False
+        chat_input = False
+        break
+    else:
+        print("\n\naOpção inválida!")
 
 # user settings
 username = "Aluno"
-context = """Você é meu assistente virtual chamado MecChat, você foi desenvolvido pelo laboratório de tecnologia da empresa Mecânica Total Brasil, baseado em uma tecnologia proprietária e é um assistente de suporte técnico especializado em serviços 
-    e ferramentas de mecânica industrial, hidraulica industrial, vulcanização industrial, lubrificação industrial. Responda de forma objetiva e clara sempre que possível.
-    Forneça soluções, orientações e sugestões para resolução de problemas."""
+context = prompt_default
 
 if chat_input:
     noKeyWord = True
@@ -57,7 +69,6 @@ def navegator(url):
             webbrowser.get(using='google-chrome').open(url)
         except:
             webbrowser.open(url)
-
 
 # variaveis para controlar o reconhecimento de voz
 r = sr.Recognizer()
@@ -102,7 +113,7 @@ while True:
                 continue
 
     if question.lower().startswith("assistente") or noKeyWord:
-        if ("desligar" in question.lower()):
+        if ("desligar" in question.lower() or "sair" in question.lower()):
             talk("Desligando.")
             exit(0)
 
@@ -124,18 +135,17 @@ while True:
             # Save the current interaction on memory database (json file)
             with open('logs/memory_data.json', 'r') as f:
                 interactions = json.load(f)
-            interactions.append({
+        except:
+            interactions = []
+            pass
+
+        interactions.append({
                 'usuario': question,
                 'assistente': answer[0]
             })
-        except:
-            pass
 
-        try:
-            with open(f'logs/memory_data.json', 'w') as f:
-                json.dump(interactions, f)
-        except:
-            pass
+        with open(f'logs/memory_data.json', 'w') as f:
+            json.dump(interactions, f)
 
         print("f'MecChat > ", answer[0])
         talk(answer[0])
