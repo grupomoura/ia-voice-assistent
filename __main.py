@@ -25,8 +25,6 @@ context = """Você é meu assistente virtual chamado MecChat, você foi desenvol
 if chat_input:
     noKeyWord = True
 
-
-
 def generate_answer(prompt):  # cria a instância da api do chatgpt
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -75,7 +73,7 @@ for i, voice in enumerate(voices):
         engine.setProperty('voice', voices[i].id)
         talk("Olá,")
         wishme()
-        talk("sou Méqui-Chét, seu assistente virtual")
+        talk("Sou seu assistente virtual")
         break
 
 while True:
@@ -94,12 +92,13 @@ while True:
             except Exception:
                 continue
 
-    # if question.lower().startswith("plataforma especialista"):
-    #     webbrowser.open("youtube.com")
-    #     talk("Ok! Abrindo a plataforma especialista.")
-    #     continue
+    if question.lower().startswith("abrir plataforma especialista"):
+        webbrowser.open("https://app.mecanicatotalacademy.com.br")
+        talk("Ok! Abrindo a plataforma especialista.")
+        continue
+
     # elif question.lower().startswith("youtube"):
-    #     webbrowser.open("youtube.com")
+    #     webbrowser.open("http://youtube.com")
     #     talk("Ok! Abrindo o youtube.")
     #     continue
     
@@ -108,8 +107,7 @@ while True:
         talk("Ok! Abrindo o GOOGLE.")
         continue
 
-    if question.lower().startswith("assistente") or noKeyWord:
-    
+    elif question.lower().startswith("assistente") or noKeyWord:
         if ("desligar" in question.lower()):
             talk("Desligando.")
             exit(0)
