@@ -43,6 +43,7 @@ Quando a variável `chat_input` estiver definida como `False`, o MecChat usará 
 
 O MecChat responde a comandos específicos que podem ser ditos em voz alta ou digitados na linha de comando. Alguns comandos úteis incluem:
 
+- "Assistente, "Qualquer coisa que queira perguntar": Isso acionará a resposta direta do ChatGpt com o prompt configurado.
 - "Assistente, desligar": Isso encerrará o Assistente MecChat.
 - "Assistente, já entendi": Isso interrompe a resposta do Assistente MecChat.
 - "Assistente, pode parar": Isso interrompe a resposta do Assistente MecChat.
