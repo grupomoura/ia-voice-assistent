@@ -8,6 +8,10 @@ import webbrowser
 import threading
 import pytz
 from datetime import datetime
+import platform
+
+# Obtém o nome do sistema operacional
+sistema_operacional = platform.system()
 
 interrupt_speech = False
 config = configparser.ConfigParser()
@@ -17,9 +21,13 @@ config.read('config.ini')
 openai.api_key = config.get('openai', 'api_key')
 prompt_default = config.get('prompts', 'default')
 username = config.get('user', 'username')
-mic_sensibility = config.get('configs', 'mic_sensibility')
-speed_voice = config.get('configs', 'speed_voice')
-ia_volume = config.get('configs', 'ia_volume')
+mic_sensibility = int(config.get('configs', 'mic_sensibility'))
+speed_voice = int(config.get('configs', 'speed_voice'))
+if sistema_operacional.lower() == 'windows':
+    speed_voice = speed_voice*3
+ia_volume = float(config.get('configs', 'ia_volume'))
+
+print(speed_voice)
 
 def clear_console():
     try:
@@ -56,6 +64,8 @@ def print_ts_log(text=""):
 clear_console()
 print('_________________________________________\n')
 print_ts_log('MecChat Voice Assistent 0.1')
+# Imprime o nome do sistema operacional
+print(f"Sistema Operacional: {sistema_operacional}")
 print('_________________________________________')
 
 while True:
@@ -133,7 +143,7 @@ except:
 voices = engine.getProperty('voices')
 
 # ==================== CONFIGURAÇOES DE VOZ  ====================
-engine.setProperty('rate', speed_voice)  # velocidade 120 = lento
+engine.setProperty('rate', 240)  # velocidade 120 = lento
 engine.setProperty("volume", ia_volume) # Volume da voz 0-1
 
 # ==================== SELEÇÃO DE VOZES  ====================
@@ -157,7 +167,7 @@ while True:
         with mic as source:
             try:
                 r.adjust_for_ambient_noise(source, duration = 1)
-                r.energy_threshold = 4000
+                r.energy_threshold = mic_sensibility
                 r.pause_threshold = 1
                 print("Escutando..")
                 audio = r.listen(source)
@@ -210,7 +220,6 @@ while True:
             json.dump(interactions, f)
 
         print("MecChat > ", answer[0])
-        # talk(answer[0])
 
         # Salve a resposta atual na variável de controle para interromper
         current_response = answer[0]
