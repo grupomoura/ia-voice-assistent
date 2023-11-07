@@ -16,6 +16,9 @@ config.read('config.ini')
 # Key da openai para utilizar o chatgpt
 openai.api_key = config.get('openai', 'api_key')
 prompt_default = config.get('prompts', 'default')
+mic_sensibility = config.get('configs', 'mic_sensibility')
+speed_voice = config.get('configs', 'speed_voice')
+ia_volume = config.get('configs', 'ia_volume')
 
 def clear_console():
     try:
@@ -128,14 +131,15 @@ except:
 voices = engine.getProperty('voices')
 
 # ==================== CONFIGURAÇOES DE VOZ  ====================
-engine.setProperty('rate', 60)  # velocidade 120 = lento
-engine.setProperty("volume", 1.) # Volume da voz 0-1
+engine.setProperty('rate', speed_voice)  # velocidade 120 = lento
+engine.setProperty("volume", ia_volume) # Volume da voz 0-1
 
 # ==================== SELEÇÃO DE VOZES  ====================
 for i, voice in enumerate(voices):
     if voice.languages == ['pt-BR']:
         engine.setProperty('voice', voices[i].id)
-        print_ts_log("\n\nOlá! Sou seu assistente pessoal")
+        print()
+        print_ts_log("Olá! Sou seu assistente pessoal")
         talk("Olá,")
         wishme()
         talk("Sou seu assistente pessoal")
@@ -151,7 +155,7 @@ while True:
         with mic as source:
             try:
                 r.adjust_for_ambient_noise(source)
-                r.energy_threshold = 3000
+                r.energy_threshold = mic_sensibility
                 r.pause_threshold = 1
                 print("Escutando..")
                 audio = r.listen(source)
