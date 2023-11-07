@@ -16,6 +16,7 @@ config.read('config.ini')
 # Key da openai para utilizar o chatgpt
 openai.api_key = config.get('openai', 'api_key')
 prompt_default = config.get('prompts', 'default')
+<<<<<<< Updated upstream
 mic_sensibility = config.get('configs', 'mic_sensibility')
 speed_voice = config.get('configs', 'speed_voice')
 ia_volume = config.get('configs', 'ia_volume')
@@ -28,6 +29,18 @@ def clear_console():
             os.system("cls")
         except:
             pass
+=======
+username = config.get('user', 'username')
+mic_sensibility = int(config.get('configs', 'mic_sensibility'))
+speed_voice = int(config.get('configs', 'speed_voice'))
+if sistema_operacional.lower() == 'windows':
+    speed_voice = speed_voice*3
+ia_volume = float(config.get('configs', 'ia_volume'))
+
+# variaveis para controlar o reconhecimento de voz
+r = sr.Recognizer()
+mic = sr.Microphone()
+>>>>>>> Stashed changes
 
 def print_timer():
     # Define o fuso horário de Brasília
@@ -50,6 +63,60 @@ def print_ts_log(text=""):
     # Formata a hora de Brasília e imprime
     formatted_time = brasilia_time.strftime("%H:%M:%S")
     print("[" + formatted_time + "] " + text)
+
+# variaveis de controle de sintese de voz
+try:
+    engine =  pyttsx4.init() #Padrão selecionado
+except:
+    engine =  pyttsx4.init('dummy')
+
+# ==================== LISTAGEM DE VOZES  ====================
+voices = engine.getProperty('voices')
+
+# ==================== CONFIGURAÇOES DE VOZ  ====================
+engine.setProperty('rate', speed_voice)  # velocidade 120 = lento
+engine.setProperty("volume", ia_volume) # Volume da voz 0-1
+
+def talk(texto):  # função para sintese de voz
+    global interrupt_speech
+    # Verifica se a síntese de voz deve ser interrompida
+    if interrupt_speech:
+        engine.stop()
+        interrupt_speech = False
+    else:
+        engine.say(texto)
+        engine.runAndWait()
+        engine.stop()
+
+def wishme():    # função para reconhecer qual momendo do dia, manhã, tarde, noite.
+    hour=int(datetime.now().hour)
+    if hour>=0 and hour<12:
+        talk('Bom dia! ')
+    elif hour>=12 and hour<18:   
+        talk('Boa tarde! ')
+    else:
+        talk('Boa noite! ')
+
+# ==================== SELEÇÃO DE VOZES  ====================
+for i, voice in enumerate(voices):
+    if voice.languages == ['pt-BR'] or voice.name == 'Microsoft Maria Desktop - Portuguese(Brazil)':
+        engine.setProperty('voice', voices[i].id)
+        print()
+        print_ts_log("Olá! Sou seu assistente pessoal")
+        talk("Olá")
+        wishme()
+        talk("Sou seu assistente pessoal")
+        break
+
+def clear_console():
+    try:
+        os.system("clear")
+    except:
+        pass
+    try:
+        os.system("cls")
+    except:
+        pass
 
 clear_console()
 print_ts_log('MecChat Voice Assistent 0.1')
@@ -81,32 +148,12 @@ if chat_input:
 def generate_answer(prompt):  # cria a instância da api do chatgpt
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": "Meu nome é {0} e {1}".format(
+        messages=[{"role": "system", "content": "Você esta falando com {0} e {1}".format(
             username, context)}, {"role": "user", "content": "{0}".format(prompt)}],
         max_tokens=1000,
         temperature=0.5,
     )
     return [response.choices[0].message.content]
-
-def talk(texto):  # função para sintese de voz
-    global interrupt_speech
-    engine.say(texto)
-    engine.runAndWait()
-    engine.stop()
-
-    # Verifica se a síntese de voz deve ser interrompida
-    if interrupt_speech:
-        engine.stop()
-        interrupt_speech = False
-
-def wishme():    # função para reconhecer qual momendo do dia, manhã, tarde, noite.
-    hour=int(datetime.now().hour)
-    if hour>=0 and hour<12:
-        talk('Bom dia! ')
-    elif hour>=12 and hour<18:   
-        talk('Boa tarde! ')
-    else:
-        talk('Boa noite! ')
 
 def navegator(url):
     try:
@@ -117,6 +164,7 @@ def navegator(url):
         except:
             webbrowser.open(url)
 
+<<<<<<< Updated upstream
 # variaveis para controlar o reconhecimento de voz
 r = sr.Recognizer()
 mic = sr.Microphone()
@@ -145,6 +193,8 @@ for i, voice in enumerate(voices):
         talk("Sou seu assistente pessoal")
         break
 
+=======
+>>>>>>> Stashed changes
 while True:
     question = ""
 
@@ -182,6 +232,7 @@ while True:
         elif ("já entendi" in question.lower() or "pode parar" in question.lower()):
             interrupt_speech = True
             print("MecChat > Ok!")
+            stop_signal.set()
             talk("Ok!")
             continue
         
@@ -215,6 +266,8 @@ while True:
         # Inicie uma nova thread para síntese de voz
         response_thread = threading.Thread(target=talk, args=(current_response,))
         response_thread.start()
+        stop_signal = threading.Event()
+
         # Continue a execução do loop
         continue
 

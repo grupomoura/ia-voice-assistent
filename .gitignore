@@ -1,3 +1,12 @@
 config.ini
+<<<<<<< Updated upstream
 /logs
 __pycache__
+=======
+/logs/*
+/dist
+/build
+__pycache__
+*.spec
+venv
+>>>>>>> Stashed changes
