@@ -43,7 +43,9 @@ Quando a variável `chat_input` estiver definida como `False`, o MecChat usará 
 
 O MecChat responde a comandos específicos que podem ser ditos em voz alta ou digitados na linha de comando. Alguns comandos úteis incluem:
 
-- "Assistente, desligar": Isso encerrará o MecChat.
+- "Assistente, desligar": Isso encerrará o Assistente MecChat.
+- "Assistente, já entendi": Isso interrompe a resposta do Assistente MecChat.
+- "Assistente, pode parar": Isso interrompe a resposta do Assistente MecChat.
 - "Assistente, abrir área do aluno": Isso abrirá a área do aluno em um navegador.
 - "Assistente, abrir plataforma": Isso abrirá a plataforma especialista em um navegador.
 

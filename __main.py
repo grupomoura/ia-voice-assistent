@@ -2,16 +2,58 @@ import openai  # pip install openai
 import speech_recognition as sr  # pip install SpeechRecognition
 import pyttsx4  # pip install pyttsx4
 import configparser
+import os
 import json
 import webbrowser
+import threading
+import pytz
 from datetime import datetime
 
+interrupt_speech = False
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 # Key da openai para utilizar o chatgpt
 openai.api_key = config.get('openai', 'api_key')
 prompt_default = config.get('prompts', 'default')
+mic_sensibility = config.get('configs', 'mic_sensibility')
+speed_voice = config.get('configs', 'speed_voice')
+ia_volume = config.get('configs', 'ia_volume')
+
+def clear_console():
+    try:
+        os.system("clear")
+    except:
+        try:
+            os.system("cls")
+        except:
+            pass
+
+def print_timer():
+    # Define o fuso horário de Brasília
+    brasilia_tz = pytz.timezone('America/Sao_Paulo')
+
+    # Obtém a hora atual de Brasília
+    brasilia_time = datetime.now(brasilia_tz)
+
+    # Formata a hora de Brasília e imprime
+    formatted_time = brasilia_time.strftime("%H:%M:%S")
+    return("[" + formatted_time + "]")
+    
+def print_ts_log(text=""):
+    # Define o fuso horário de Brasília
+    brasilia_tz = pytz.timezone('America/Sao_Paulo')
+
+    # Obtém a hora atual de Brasília
+    brasilia_time = datetime.now(brasilia_tz)
+
+    # Formata a hora de Brasília e imprime
+    formatted_time = brasilia_time.strftime("%H:%M:%S")
+    print("[" + formatted_time + "] " + text)
+
+clear_console()
+print_ts_log('MecChat Voice Assistent 0.1')
+print('_________________________________________')
 
 while True:
     option = input("""\n\nSelecione uma opção:
@@ -44,15 +86,20 @@ def generate_answer(prompt):  # cria a instância da api do chatgpt
         max_tokens=1000,
         temperature=0.5,
     )
-
     return [response.choices[0].message.content]
 
 def talk(texto):  # função para sintese de voz
+    global interrupt_speech
     engine.say(texto)
     engine.runAndWait()
     engine.stop()
 
-def wishme():                                   #for wishyou good morning ,evening and night
+    # Verifica se a síntese de voz deve ser interrompida
+    if interrupt_speech:
+        engine.stop()
+        interrupt_speech = False
+
+def wishme():    # função para reconhecer qual momendo do dia, manhã, tarde, noite.
     hour=int(datetime.now().hour)
     if hour>=0 and hour<12:
         talk('Bom dia! ')
@@ -84,28 +131,32 @@ except:
 voices = engine.getProperty('voices')
 
 # ==================== CONFIGURAÇOES DE VOZ  ====================
-engine.setProperty('rate', 60)  # velocidade 120 = lento
-engine.setProperty("volume", 1.) # Volume da voz 0-1
+engine.setProperty('rate', speed_voice)  # velocidade 120 = lento
+engine.setProperty("volume", ia_volume) # Volume da voz 0-1
 
 # ==================== SELEÇÃO DE VOZES  ====================
 for i, voice in enumerate(voices):
     if voice.languages == ['pt-BR']:
         engine.setProperty('voice', voices[i].id)
+        print()
+        print_ts_log("Olá! Sou seu assistente pessoal")
         talk("Olá,")
         wishme()
-        talk("Sou seu assistente virtual")
+        talk("Sou seu assistente pessoal")
         break
 
 while True:
     question = ""
 
     if chat_input:
-        question = input(">  (\"sair\"): ")
+        question = input(f"> {username}: ")
     else:
         # start voice recognition
         with mic as source:
             try:
                 r.adjust_for_ambient_noise(source)
+                r.energy_threshold = mic_sensibility
+                r.pause_threshold = 1
                 print("Escutando..")
                 audio = r.listen(source)
                 question = r.recognize_google(audio, language="pt-BR")
@@ -114,6 +165,7 @@ while True:
 
     if question.lower().startswith("assistente") or noKeyWord:
         if ("desligar" in question.lower() or "sair" in question.lower()):
+            print_ts_log("Desligando..")
             talk("Desligando.")
             exit(0)
 
@@ -127,7 +179,14 @@ while True:
             navegator("https://app.mecanicatotalacademy.com.br")
             continue
 
-        print("f'{0}:".format(username), question)
+        elif ("já entendi" in question.lower() or "pode parar" in question.lower()):
+            interrupt_speech = True
+            print("MecChat > Ok!")
+            talk("Ok!")
+            continue
+        
+        if not chat_input:
+            print("{0}:".format(username), question)
 
         answer = generate_answer(question)
 
@@ -140,6 +199,7 @@ while True:
             pass
 
         interactions.append({
+                'timer': print_timer(),
                 'usuario': question,
                 'assistente': answer[0]
             })
@@ -147,8 +207,17 @@ while True:
         with open(f'logs/memory_data.json', 'w') as f:
             json.dump(interactions, f)
 
-        print("f'MecChat > ", answer[0])
-        talk(answer[0])
+        print("MecChat > ", answer[0])
+        # talk(answer[0])
+
+        # Salve a resposta atual na variável de controle para interromper
+        current_response = answer[0]
+        # Inicie uma nova thread para síntese de voz
+        response_thread = threading.Thread(target=talk, args=(current_response,))
+        response_thread.start()
+        # Continue a execução do loop
+        continue
+
     else:
         print(question)
         continue
