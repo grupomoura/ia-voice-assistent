@@ -16,6 +16,7 @@ config.read('config.ini')
 # Key da openai para utilizar o chatgpt
 openai.api_key = config.get('openai', 'api_key')
 prompt_default = config.get('prompts', 'default')
+username = config.get('user', 'username')
 mic_sensibility = config.get('configs', 'mic_sensibility')
 speed_voice = config.get('configs', 'speed_voice')
 ia_volume = config.get('configs', 'ia_volume')
@@ -24,10 +25,11 @@ def clear_console():
     try:
         os.system("clear")
     except:
-        try:
-            os.system("cls")
-        except:
-            pass
+        pass
+    try:
+        os.system("cls")
+    except:
+        pass
 
 def print_timer():
     # Define o fuso horário de Brasília
@@ -52,6 +54,7 @@ def print_ts_log(text=""):
     print("[" + formatted_time + "] " + text)
 
 clear_console()
+print('_________________________________________\n')
 print_ts_log('MecChat Voice Assistent 0.1')
 print('_________________________________________')
 
@@ -72,7 +75,6 @@ while True:
         print("\n\naOpção inválida!")
 
 # user settings
-username = "Aluno"
 context = prompt_default
 
 if chat_input:
@@ -136,11 +138,11 @@ engine.setProperty("volume", ia_volume) # Volume da voz 0-1
 
 # ==================== SELEÇÃO DE VOZES  ====================
 for i, voice in enumerate(voices):
-    if voice.languages == ['pt-BR']:
+    if voice.languages == ['pt-BR'] or voice.name == 'Microsoft Maria Desktop - Portuguese(Brazil)':
         engine.setProperty('voice', voices[i].id)
         print()
         print_ts_log("Olá! Sou seu assistente pessoal")
-        talk("Olá,")
+        talk("Olá")
         wishme()
         talk("Sou seu assistente pessoal")
         break
@@ -154,8 +156,8 @@ while True:
         # start voice recognition
         with mic as source:
             try:
-                r.adjust_for_ambient_noise(source)
-                r.energy_threshold = mic_sensibility
+                r.adjust_for_ambient_noise(source, duration = 1)
+                r.energy_threshold = 4000
                 r.pause_threshold = 1
                 print("Escutando..")
                 audio = r.listen(source)
