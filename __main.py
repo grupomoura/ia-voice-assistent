@@ -63,8 +63,8 @@ def return_timer():
     brasilia_time = datetime.now(brasilia_tz)
 
     # Formata a hora de Brasília e imprime
-    formatted_time = brasilia_time.strftime("%H:%M:%S")
-    return("[" + formatted_time + "]")
+    formatted_time = brasilia_time.strftime("%d-%m-%Y-%H_%M_%S")
+    return("["+formatted_time+"]")
 
 log_timer = return_timer()
     
@@ -224,7 +224,7 @@ while True:
 
         try:
             # Save the current interaction on memory database (json file)
-            with open(f'logs/memory_data_{log_timer}.json', 'r') as f:
+            with open(f'logs/memory_data.json_{log_timer}', 'r') as f:
                 interactions = json.load(f)
         except:
             interactions = []

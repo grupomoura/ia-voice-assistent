@@ -4,3 +4,5 @@ config.ini
 /build
 __pycache__
 *.spec
+venv
+*.exe
