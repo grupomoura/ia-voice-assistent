@@ -9,6 +9,24 @@ import threading
 import pytz
 from datetime import datetime
 import platform
+from colorama import Fore, Back, Style, init
+
+# Inicializa o colorama (deve ser chamado antes de usá-lo)
+init()
+
+def print_color(color="white", text=""):
+    if color.lower() == "green":
+        color_code = Fore.GREEN
+    elif color.lower() == "red":
+        color_code = Fore.RED
+    elif color.lower() == "blue":
+        color_code = Fore.BLUE
+    elif color.lower() == "yellow":
+        color_code = Fore.YELLOW
+    else:
+        color_code = Fore.WHITE  # Cor padrão (sem cor)
+    
+    print(color_code + text + Style.RESET_ALL)
 
 # Obtém o nome do sistema operacional
 sistema_operacional = platform.system()
@@ -26,8 +44,6 @@ speed_voice = int(config.get('configs', 'speed_voice'))
 if sistema_operacional.lower() == 'windows':
     speed_voice = speed_voice*3
 ia_volume = float(config.get('configs', 'ia_volume'))
-
-print(speed_voice)
 
 def clear_console():
     try:
@@ -62,11 +78,11 @@ def print_ts_log(text=""):
     print("[" + formatted_time + "] " + text)
 
 clear_console()
-print('_________________________________________\n')
+print_color("green",'_________________________________________\n')
 print_ts_log('MecChat Voice Assistent 0.1')
 # Imprime o nome do sistema operacional
 print(f"Sistema Operacional: {sistema_operacional}")
-print('_________________________________________')
+print_color("green",'_________________________________________')
 
 while True:
     option = input("""\n\nSelecione uma opção:
@@ -82,7 +98,7 @@ while True:
         chat_input = False
         break
     else:
-        print("\n\naOpção inválida!")
+        print("\n\nOpção inválida!")
 
 # user settings
 context = prompt_default
@@ -102,14 +118,13 @@ def generate_answer(prompt):  # cria a instância da api do chatgpt
 
 def talk(texto):  # função para sintese de voz
     global interrupt_speech
-    engine.say(texto)
-    engine.runAndWait()
-    engine.stop()
-
     # Verifica se a síntese de voz deve ser interrompida
     if interrupt_speech:
         engine.stop()
         interrupt_speech = False
+    engine.say(texto)
+    engine.runAndWait()
+    engine.stop()
 
 def wishme():    # função para reconhecer qual momendo do dia, manhã, tarde, noite.
     hour=int(datetime.now().hour)
@@ -143,7 +158,7 @@ except:
 voices = engine.getProperty('voices')
 
 # ==================== CONFIGURAÇOES DE VOZ  ====================
-engine.setProperty('rate', 240)  # velocidade 120 = lento
+engine.setProperty('rate', speed_voice)  # velocidade 120 = lento
 engine.setProperty("volume", ia_volume) # Volume da voz 0-1
 
 # ==================== SELEÇÃO DE VOZES  ====================
@@ -161,7 +176,7 @@ while True:
     question = ""
 
     if chat_input:
-        question = input(f"> {username}: ")
+        question = input(Fore.BLUE + f"> {username}: " + Style.RESET_ALL)
     else:
         # start voice recognition
         with mic as source:
@@ -169,7 +184,7 @@ while True:
                 r.adjust_for_ambient_noise(source, duration = 1)
                 r.energy_threshold = mic_sensibility
                 r.pause_threshold = 1
-                print("Escutando..")
+                print_color("yellow","Escutando..")
                 audio = r.listen(source)
                 question = r.recognize_google(audio, language="pt-BR")
             except Exception:
@@ -182,23 +197,25 @@ while True:
             exit(0)
 
         elif ("área do aluno" in question.lower()):
+            print_color("green","Ok! Abrindo a área do aluno.")
             talk("Ok! Abrindo a área do aluno.")
             navegator("https://app.mecanicatotalacademy.com.br/lessons")
             continue
 
         elif ("abrir plataforma" in question.lower()):
+            print_color("green", "Ok! Abrindo a plataforma especialista.")
             talk("Ok! Abrindo a plataforma especialista.")
             navegator("https://app.mecanicatotalacademy.com.br")
             continue
 
         elif ("já entendi" in question.lower() or "pode parar" in question.lower()):
             interrupt_speech = True
-            print("MecChat > Ok!")
+            print_color("green", "MecChat > Ok!")
             talk("Ok!")
             continue
         
         if not chat_input:
-            print("{0}:".format(username), question)
+            print_color("blue",f"{username}: {question}")
 
         answer = generate_answer(question)
 
@@ -219,7 +236,7 @@ while True:
         with open(f'logs/memory_data.json', 'w') as f:
             json.dump(interactions, f)
 
-        print("MecChat > ", answer[0])
+        print_color("green", f"MecChat > {answer[0]}")
 
         # Salve a resposta atual na variável de controle para interromper
         current_response = answer[0]
