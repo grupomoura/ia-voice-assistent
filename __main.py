@@ -55,7 +55,7 @@ def clear_console():
     except:
         pass
 
-def print_timer():
+def return_timer():
     # Define o fuso horário de Brasília
     brasilia_tz = pytz.timezone('America/Sao_Paulo')
 
@@ -65,6 +65,8 @@ def print_timer():
     # Formata a hora de Brasília e imprime
     formatted_time = brasilia_time.strftime("%H:%M:%S")
     return("[" + formatted_time + "]")
+
+log_timer = return_timer()
     
 def print_ts_log(text=""):
     # Define o fuso horário de Brasília
@@ -176,6 +178,7 @@ while True:
     question = ""
 
     if chat_input:
+        print()
         question = input(Fore.BLUE + f"> {username}: " + Style.RESET_ALL)
     else:
         # start voice recognition
@@ -221,19 +224,19 @@ while True:
 
         try:
             # Save the current interaction on memory database (json file)
-            with open('logs/memory_data.json', 'r') as f:
+            with open(f'logs/memory_data_{log_timer}.json', 'r') as f:
                 interactions = json.load(f)
         except:
             interactions = []
             pass
 
         interactions.append({
-                'timer': print_timer(),
+                'timer': return_timer(),
                 'usuario': question,
                 'assistente': answer[0]
             })
 
-        with open(f'logs/memory_data.json', 'w') as f:
+        with open(f'logs/memory_data_{log_timer}.json', 'w') as f:
             json.dump(interactions, f)
 
         print_color("green", f"MecChat > {answer[0]}")
