@@ -43,6 +43,8 @@ mic_sensibility = int(config.get('configs', 'mic_sensibility'))
 speed_voice = int(config.get('configs', 'speed_voice'))
 if sistema_operacional.lower() == 'windows':
     speed_voice = speed_voice*3
+elif sistema_operacional.lower() == 'linux':
+    speed_voice = speed_voice*3
 ia_volume = float(config.get('configs', 'ia_volume'))
 
 def clear_console():
@@ -77,7 +79,7 @@ def print_ts_log(text=""):
 
     # Formata a hora de Brasília e imprime
     formatted_time = brasilia_time.strftime("%H:%M:%S")
-    print("[" + formatted_time + "] " + text)
+    print_color("green","[" + formatted_time + "] " + text)
 
 clear_console()
 print_color("green",'_________________________________________\n')
@@ -113,7 +115,7 @@ def generate_answer(prompt):  # cria a instância da api do chatgpt
         model="gpt-3.5-turbo",
         messages=[{"role": "system", "content": "Meu nome é {0} e {1}".format(
             username, context)}, {"role": "user", "content": "{0}".format(prompt)}],
-        max_tokens=1000,
+        max_tokens=500,
         temperature=0.5,
     )
     return [response.choices[0].message.content]
@@ -165,10 +167,10 @@ engine.setProperty("volume", ia_volume) # Volume da voz 0-1
 
 # ==================== SELEÇÃO DE VOZES  ====================
 for i, voice in enumerate(voices):
-    if voice.languages == ['pt-BR'] or voice.name == 'Microsoft Maria Desktop - Portuguese(Brazil)':
+    if voice.id == 'brazil' or voice.languages == ['pt-BR'] or voice.name == 'Microsoft Maria Desktop - Portuguese(Brazil)':
         engine.setProperty('voice', voices[i].id)
         print()
-        print_ts_log("Olá! Sou seu assistente pessoal")
+        print_color("green", "Olá! Sou seu assistente pessoal")
         talk("Olá")
         wishme()
         talk("Sou seu assistente pessoal")
@@ -206,7 +208,7 @@ while True:
             continue
 
         elif ("abrir plataforma" in question.lower()):
-            print_color("green", "Ok! Abrindo a plataforma especialista.")
+            print_color("green","Ok! Abrindo a plataforma especialista.")
             talk("Ok! Abrindo a plataforma especialista.")
             navegator("https://app.mecanicatotalacademy.com.br")
             continue
