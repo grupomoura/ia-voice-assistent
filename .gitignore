@@ -1,8 +1,13 @@
+venv
+.venv
 config.ini
+config.zip
+__pycache__
 /logs/*
 /dist
 /build
-__pycache__
+
+# Arquivos 
 *.spec
-venv
 *.exe
+*.zip

@@ -96,10 +96,12 @@ while True:
     if option == "1":
         noKeyWord = True
         chat_input = True
+        print()
         break
     elif option == "2":
         noKeyWord = False
         chat_input = False
+        print()
         break
     else:
         print("\n\nOpção inválida!")
@@ -120,24 +122,40 @@ def generate_answer(prompt):  # cria a instância da api do chatgpt
     )
     return [response.choices[0].message.content]
 
-def talk(texto):  # função para sintese de voz
+# Função para verificar se a thread deve ser interrompida
+def thread_stop():
+    return interrupt_speech
+
+def talk(texto, thread_stop):  # função para sintese de vo, thread_stopz
     global interrupt_speech
+    
     # Verifica se a síntese de voz deve ser interrompida
-    if interrupt_speech:
+    if interrupt_speech or thread_stop():
+        if engine._inLoop:
+            engine.endLoop()
         engine.stop()
         interrupt_speech = False
-    engine.say(texto)
-    engine.runAndWait()
-    engine.stop()
+        return  # Encerra a função prematuramente se interrupt_speech for verdadeiro
+    
+    try:
+        engine.say(texto)
+        engine.runAndWait()
+        engine.stop()
+    except:
+        if engine._inLoop:
+            engine.endLoop()
+            engine.stop()
+            talk(texto, thread_stop)
+    return
 
 def wishme():    # função para reconhecer qual momendo do dia, manhã, tarde, noite.
     hour=int(datetime.now().hour)
     if hour>=0 and hour<12:
-        talk('Bom dia! ')
+        talk('Bom dia! ', thread_stop)
     elif hour>=12 and hour<18:   
-        talk('Boa tarde! ')
+        talk('Boa tarde! ', thread_stop)
     else:
-        talk('Boa noite! ')
+        talk('Boa noite! ', thread_stop)
 
 def navegator(url):
     try:
@@ -154,9 +172,9 @@ mic = sr.Microphone()
 
 # variaveis de controle de sintese de voz
 try:
-    engine =  pyttsx4.init() #Padrão selecionado
+    engine = pyttsx4.init() #Padrão selecionado
 except:
-    engine =  pyttsx4.init('dummy')
+    engine = pyttsx4.init('dummy')
 
 # ==================== LISTAGEM DE VOZES  ====================
 voices = engine.getProperty('voices')
@@ -170,12 +188,14 @@ for i, voice in enumerate(voices):
     if voice.id == 'brazil' or voice.languages == ['pt-BR'] or voice.name == 'Microsoft Maria Desktop - Portuguese(Brazil)':
         engine.setProperty('voice', voices[i].id)
         print()
-        print_color("green", "Olá! Sou seu assistente pessoal")
-        talk("Olá")
+        print_color("green", "MecChat > Olá! Sou seu assistente pessoal")
+        talk("Olá", thread_stop)
         wishme()
-        talk("Sou seu assistente pessoal")
+        talk("Sou seu assistente pessoal", thread_stop)
         break
-
+    else:
+        print_color("red",'Não foi possível selecionar uma voz\n\n')
+                    
 while True:
     question = ""
 
@@ -198,25 +218,25 @@ while True:
     if question.lower().startswith("assistente") or noKeyWord:
         if ("desligar" in question.lower() or "sair" in question.lower()):
             print_ts_log("Desligando..")
-            talk("Desligando.")
+            talk("Desligando.", thread_stop)
             exit(0)
 
         elif ("área do aluno" in question.lower()):
             print_color("green","Ok! Abrindo a área do aluno.")
-            talk("Ok! Abrindo a área do aluno.")
+            talk("Ok! Abrindo a área do aluno.", thread_stop)
             navegator("https://app.mecanicatotalacademy.com.br/lessons")
             continue
 
         elif ("abrir plataforma" in question.lower()):
             print_color("green","Ok! Abrindo a plataforma especialista.")
-            talk("Ok! Abrindo a plataforma especialista.")
+            talk("Ok! Abrindo a plataforma especialista.", thread_stop)
             navegator("https://app.mecanicatotalacademy.com.br")
             continue
 
         elif ("já entendi" in question.lower() or "pode parar" in question.lower()):
             interrupt_speech = True
             print_color("green", "MecChat > Ok!")
-            talk("Ok!")
+            talk("Ok!", thread_stop)
             continue
         
         if not chat_input:
@@ -246,7 +266,7 @@ while True:
         # Salve a resposta atual na variável de controle para interromper
         current_response = answer[0]
         # Inicie uma nova thread para síntese de voz
-        response_thread = threading.Thread(target=talk, args=(current_response,))
+        response_thread = threading.Thread(target=talk, args=(current_response, thread_stop))
         response_thread.start()
         # Continue a execução do loop
         continue
