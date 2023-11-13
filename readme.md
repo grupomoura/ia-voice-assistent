@@ -39,7 +39,7 @@ O MecChat também oferece suporte ao reconhecimento de voz. Para usar essa funci
 
 Quando a variável `chat_input` estiver definida como `False`, o MecChat usará o reconhecimento de voz para ouvir suas perguntas e comandos. Após falar uma pergunta ou comando, o MecChat fornecerá uma resposta por meio de síntese de voz.
 
-## Comandos Disponíveis
+## Comandos de voz Disponíveis
 
 O MecChat responde a comandos específicos que podem ser ditos em voz alta ou digitados na linha de comando. Alguns comandos úteis incluem:
 

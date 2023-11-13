@@ -10,6 +10,10 @@ import pytz
 from datetime import datetime
 import platform
 from colorama import Fore, Back, Style, init
+import keyboard  
+from time import sleep
+from pydub import AudioSegment
+from pydub.playback import play
 
 # Inicializa o colorama (deve ser chamado antes de usá-lo)
 init()
@@ -32,6 +36,12 @@ def print_color(color="white", text=""):
 sistema_operacional = platform.system()
 
 interrupt_speech = False
+chat_press = False
+# LISTENING_SOUND = AudioSegment.from_wav("bip.wav")
+LISTENING_SOUND = AudioSegment.from_mp3("voice\message_start.mp3")
+LOADING_SOUND = AudioSegment.from_mp3("voice\loading.mp3")
+ERROR_SOUND = AudioSegment.from_mp3("voice\error.mp3")
+
 config = configparser.ConfigParser()
 config.read('config.ini')
 
@@ -83,15 +93,26 @@ def print_ts_log(text=""):
 
 clear_console()
 print_color("green",'_________________________________________\n')
-print_ts_log('MecChat Voice Assistent 0.1')
+print_ts_log('MecChat Voice Assistent 1.0')
 # Imprime o nome do sistema operacional
 print(f"Sistema Operacional: {sistema_operacional}")
+
+print_color("Blue", """
+Comandos de voz disponíveis:
+- "Assistente, "Qualquer coisa que queira perguntar"
+- "Assistente, desligar": Isso encerrará o Assistente MecChat.
+- "Assistente, já entendi": Isso interrompe a resposta do Assistente MecChat.
+- "Assistente, pode parar": Isso interrompe a resposta do Assistente MecChat.
+- "Assistente, abrir área do aluno": Isso abrirá a área do aluno em um navegador.
+- "Assistente, abrir plataforma": Isso abrirá a plataforma especialista em um navegador.            
+""")
 print_color("green",'_________________________________________')
 
 while True:
     option = input("""\n\nSelecione uma opção:
     1. Conversar digitando
     2. Conversar falando (Microfone)
+    3. Apertar (ctrl + alt + f) para falar
     Resposta: """)
     if option == "1":
         noKeyWord = True
@@ -103,8 +124,31 @@ while True:
         chat_input = False
         print()
         break
+    elif option == "3":
+        noKeyWord = False
+        chat_input = False
+        print()
+        break
     else:
         print("\n\nOpção inválida!")
+
+print_color("yellow","Inicializando.. ")
+play(LOADING_SOUND)
+
+def wait_for_ctrl_f():
+    global chat_press
+    while not keyboard.is_pressed('ctrl+alt+f'):
+        pass
+    chat_press = True
+
+def start_wait_for_ctrl_f():
+    # Inicie uma thread para aguardar a tecla Ctrl+F ser pressionada
+    ctrl_f_thread = threading.Thread(target=wait_for_ctrl_f)
+    ctrl_f_thread.start()
+
+if option == "3":
+    # Inicie uma thread para aguardar a tecla Ctrl+F ser pressionada
+    start_wait_for_ctrl_f()
 
 # user settings
 context = prompt_default
@@ -136,7 +180,6 @@ def talk(texto, thread_stop):  # função para sintese de vo, thread_stopz
         engine.stop()
         interrupt_speech = False
         return  # Encerra a função prematuramente se interrupt_speech for verdadeiro
-    
     try:
         engine.say(texto)
         engine.runAndWait()
@@ -192,31 +235,55 @@ for i, voice in enumerate(voices):
         talk("Olá", thread_stop)
         wishme()
         talk("Sou seu assistente pessoal", thread_stop)
+        if option == "3":
+            print_color("yellow","Pressione (ctrl + alt + f) para falar")
         break
     else:
         print_color("red",'Não foi possível selecionar uma voz\n\n')
-                    
+
+def start_recognition():
+    # start voice recognition
+    with mic as source:
+        try:
+            r.adjust_for_ambient_noise(source, duration = 1)
+            r.energy_threshold = mic_sensibility
+            r.pause_threshold = 1
+            print_color("yellow","Escutando..")
+            if option == "3":
+                play(LISTENING_SOUND)
+            audio = r.listen(source=source, phrase_time_limit=6)
+            question = r.recognize_google(audio, language="pt-BR")
+        except sr.UnknownValueError: # error: recognizer does not understand
+            print()
+            return
+        except sr.RequestError:
+            print('Serviço offline') # error: recognizer is not connected
+            return
+        except Exception:
+            print_ts_log('Verifique start_recognition')
+            return
+        return question
+
 while True:
     question = ""
 
     if chat_input:
         print()
         question = input(Fore.BLUE + f"> {username}: " + Style.RESET_ALL)
+    elif option == "3":
+        if chat_press:
+            question = start_recognition()
+            sleep(0.05)
+        else:
+            continue
     else:
-        # start voice recognition
-        with mic as source:
-            try:
-                r.adjust_for_ambient_noise(source, duration = 1)
-                r.energy_threshold = mic_sensibility
-                r.pause_threshold = 1
-                print_color("yellow","Escutando..")
-                audio = r.listen(source)
-                question = r.recognize_google(audio, language="pt-BR")
-            except Exception:
-                continue
+        try:
+            question = start_recognition()
+        except:
+            continue
 
-    if question.lower().startswith("assistente") or noKeyWord:
-        if ("desligar" in question.lower() or "sair" in question.lower()):
+    if question != None and question.lower().startswith("assistente") or noKeyWord or question != None and chat_press:
+        if ("desligar" in question.lower() or "encerrar" in question.lower()):
             print_ts_log("Desligando..")
             talk("Desligando.", thread_stop)
             exit(0)
@@ -261,16 +328,31 @@ while True:
         with open(f'logs/memory_data_{log_timer}.json', 'w') as f:
             json.dump(interactions, f)
 
-        print_color("green", f"MecChat > {answer[0]}")
+        print_color("green", f"MecChat > {answer[0]}\n\n")
 
         # Salve a resposta atual na variável de controle para interromper
         current_response = answer[0]
         # Inicie uma nova thread para síntese de voz
         response_thread = threading.Thread(target=talk, args=(current_response, thread_stop))
         response_thread.start()
+        
+        if option == "3":
+            chat_press = False
+            print_color("yellow","Pressione (ctrl + alt + f) para falar")
+            start_wait_for_ctrl_f()
+
         # Continue a execução do loop
         continue
 
     else:
-        print(question)
+        if question:
+            print(question)
+        if option == "3":
+            chat_press = False
+            if not question:
+                play(ERROR_SOUND)
+                talk("Não entendi, poderia repetir?", thread_stop)
+                print_color("green", "MecChat > Não entendi, poderia repetir?")
+                print_color("yellow","\n\nPressione (ctrl + alt + f) para falar")
+            start_wait_for_ctrl_f()
         continue

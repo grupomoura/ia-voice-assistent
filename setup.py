@@ -19,4 +19,4 @@ setup(
     executables=[Executable("main.py", base=base)],
 )
 
-# cxfreeze -c main.py --target-dir dist --target-name MecChat-Voice-Assistent 
+# cxfreeze -c __main.py --target-dir dist --target-name MecChat-Voice-Assistent 
