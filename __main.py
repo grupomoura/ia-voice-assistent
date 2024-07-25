@@ -37,10 +37,10 @@ sistema_operacional = platform.system()
 
 interrupt_speech = False
 chat_press = False
-# LISTENING_SOUND = AudioSegment.from_wav("bip.wav")
-LISTENING_SOUND = AudioSegment.from_mp3("voice\message_start.mp3")
-LOADING_SOUND = AudioSegment.from_mp3("voice\loading.mp3")
-ERROR_SOUND = AudioSegment.from_mp3("voice\error.mp3")
+LISTENING_SOUND = AudioSegment.from_wav("voice/bip.wav")
+LISTENING_SOUND = AudioSegment.from_mp3("voice/message_start.mp3")
+LOADING_SOUND = AudioSegment.from_mp3("voice/loading.mp3")
+ERROR_SOUND = AudioSegment.from_mp3("voice/error.mp3")
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -228,7 +228,7 @@ engine.setProperty("volume", ia_volume) # Volume da voz 0-1
 
 # ==================== SELEÇÃO DE VOZES  ====================
 for i, voice in enumerate(voices):
-    if voice.id == 'brazil' or voice.languages == ['pt-BR'] or voice.name == 'Microsoft Maria Desktop - Portuguese(Brazil)':
+    if "brazil" in voice.id.lower() or voice.languages == ['pt-BR'] or voice.name == 'Microsoft Maria Desktop - Portuguese(Brazil)':
         engine.setProperty('voice', voices[i].id)
         print()
         print_color("green", "MecChat > Olá! Sou seu assistente pessoal")
