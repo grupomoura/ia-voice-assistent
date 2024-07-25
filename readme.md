@@ -1,4 +1,4 @@
-# MecChat - Assistente Virtual para Suporte Técnico
+# IA - Assistente Virtual para Suporte Técnico
 
 Bem-vindo ao repositório do ADD-ON MecChat Voice Assistente Virtual Especializado. MecChat foi desenvolvido pela equipe de desenvolvedores da empresa Mecânica Total Brasil, utilizando tecnologia várias tecnologias para fornecer soluções, orientações e sugestões claras e objetivas para resolução de problemas mecânicos. Este ADD-ON adiciona a funcionalidade de assistente de voz a plataforma principal que é uma ferramenta poderosa para suporte técnico e assistência na área mecânica. 
 
